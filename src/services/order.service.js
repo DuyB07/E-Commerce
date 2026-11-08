@@ -19,7 +19,7 @@ export const getAllOrders = async () => {
     return await orderRepo.getAllOrders();
 };
 
-export const getOrderById = async (getOrderById, user) => {
+export const getOrderById = async (orderId, user) => {
     const order = await orderRepo.getOrderDetails(orderId);
 
     if (!order) {

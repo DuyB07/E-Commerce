@@ -129,7 +129,7 @@ export const getOrderDetails = async (orderId) => {
 };
 
 // Admin cập nhật trạng thái đơn hàng
-export const undateOrderStatus = async (orderId, newStatus) => {
+export const updateOrderStatus = async (orderId, newStatus) => {
     const pool = await getPool();
     const result = await pool.request()
         .input('orderId', sql.Int, orderId)
@@ -137,8 +137,9 @@ export const undateOrderStatus = async (orderId, newStatus) => {
         .query(`
             UPDATE orders
             SET status = @status
-            OUTPUT INSERTED.*
-            WHERE id = @orderId
+            WHERE id = @orderId;
+
+            SELECT * FROM orders WHERE id = @orderId;
         `);
     return result.recordset[0];
 };

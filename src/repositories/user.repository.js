@@ -26,5 +26,23 @@ export const createUser = async (user) => {
     return result.recordset[0];
 };
 
+export const updateUserProfile = async (userId, data) => {
+    const pool = await getPool();
+    const result = await pool.request()
+        .input('userId', sql.Int, userId)
+        .input('fullName', sql.NVarChar, data.fullName)
+        .input('phone', sql.VarChar, data.phone)
+        .query(`
+            -- 1. Cập nhật dữ liệu
+            UPDATE users
+            SET full_name = @fullName, phone = @phone
+            WHERE id = @userId;
 
+            -- 2. Truy vấn lại để trả về thông tin (ko có password)
+            SELECT id, full_name, email, phone, role, created_at, updated_at
+            FROM users
+                WHERE id = @userId;
+        `);
 
+    return result.recordset[0];
+};
