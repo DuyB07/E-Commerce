@@ -16,3 +16,19 @@ export const getProduct = async (id) => {
 export const createProduct = async (productData) => {
     return await productRepo.createProduct(productData);
 };
+
+export const updateProduct = async (productId, updateData) => {
+    await getProduct(productId) // Ktra spham có tồn tại ko
+
+    return await productRepo.updateProductInfo(productId, updateData);
+};
+
+export const updateStock = async (productId, newStock) => {
+    await getProduct(productId);
+    return await productRepo.updateProductStock(productId, newStock);
+};
+
+export const deactivateProduct = async (productId) => {
+    await getProduct(productId);
+    return await productRepo.deactivateProduct(productId);
+};
