@@ -9,12 +9,4 @@ const router = express.Router();
 router.post('/register', validate(registerSchema), authController.register);
 router.post('/login', validate(loginSchema), authController.login);
 
-router.get('/me', verifyToken, (req, res) => {
-    res.status(200).json({
-        success: true,
-        message: 'Lấy thông tin cá nhân thành công',
-        data: req.user
-    });
-});
-
 export default router;

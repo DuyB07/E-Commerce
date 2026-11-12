@@ -97,7 +97,12 @@ export const getOrderByUserId = async (userId) => {
 export const getAllOrders = async () => {
     const pool = await getPool();
     const result = await pool.request()
-        .query('SELECT * FROM orders ORDER BY created_at DESC');
+        .query(`
+            SELECT o.*, u.full_name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone
+            FROM orders o
+            JOIN users u ON o.user_id = u.id
+            ORDER BY o.created_at DESC
+        `);
     return result.recordset;
 };
 
@@ -108,7 +113,11 @@ export const getOrderDetails = async (orderId) => {
     // Lấy thông tin tổng quan của order
     const orderRes = await pool.request()
         .input('orderId', sql.Int, orderId)
-        .query('SELECT * FROM orders WHERE id = @orderId');
+        .query(`
+            SELECT o.*, u.full_name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone
+            FROM orders o
+            JOIN users u ON o.user_id = u.id    
+        `);
     const order = orderRes.recordset[0];
 
     if (!order) return null;
@@ -131,15 +140,35 @@ export const getOrderDetails = async (orderId) => {
 // Admin cập nhật trạng thái đơn hàng
 export const updateOrderStatus = async (orderId, newStatus) => {
     const pool = await getPool();
-    const result = await pool.request()
-        .input('orderId', sql.Int, orderId)
-        .input('status', sql.VarChar, newStatus)
-        .query(`
-            UPDATE orders
-            SET status = @status
-            WHERE id = @orderId;
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+    try {
+        const req = new sql.Request(transaction);
+        await req
+            .input('orderId', sql.Int, orderId)
+            .input('status', sql.VarChar, newStatus)
+            .query('UPDATE orders SET status = @status WHERE id = @orderId');
 
-            SELECT * FROM orders WHERE id = @orderId;
-        `);
-    return result.recordset[0];
+        if (newStatus === 'CANCELLED') {
+            const restockReq = new sql.Request(transaction);
+            await restockReq
+                .input('orderId', sql.Int, orderId)
+                .query(`
+                    UPDATE p
+                    SET p.stock = p.stock + oi.quantity
+                    FROM products p
+                    INNER JOIN order_items oi ON p.id = oi.product_id
+                    WHERE oi.order_id = @orderId
+                `);
+        }
+
+        await transaction.commit();
+        const result = await pool.request()
+            .input('orderId', sql.Int, orderId)
+            .query('SELECT * FROM orders WHERE id = @orderId');
+        return result.recordset[0];
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
+    }
 };

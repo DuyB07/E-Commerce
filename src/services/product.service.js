@@ -7,7 +7,7 @@ export const getProducts = async () => {
 
 export const getProduct = async (id) => {
     const product = await productRepo.getProductById(id);
-    if (!product) {
+    if (!product || !product.is_active) {
         throw new NotFoundError('Không tìm thấy sản phẩm này');
     }
     return product;
@@ -18,7 +18,10 @@ export const createProduct = async (productData) => {
 };
 
 export const updateProduct = async (productId, updateData) => {
-    await getProduct(productId) // Ktra spham có tồn tại ko
+    const product = await productRepo.getProductById(productId);
+    if (!product) {
+        throw new NotFoundError('Không tìm thấy sản phẩm này');
+    }
 
     return await productRepo.updateProductInfo(productId, updateData);
 };

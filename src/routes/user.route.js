@@ -6,6 +6,10 @@ import { updateProfileSchema } from '../validations/user.validation.js';
 
 const router = express.Router();
 
-router.put('/me', verifyToken, validate(updateProfileSchema), userController.updateProfile);
+router.use(verifyToken)
+
+router.get('/me', userController.getUser);
+
+router.put('/me', validate(updateProfileSchema), userController.updateProfile);
 
 export default router;

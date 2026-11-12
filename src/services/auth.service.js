@@ -1,12 +1,13 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import * as userRepository from '../repositories/user.repository.js'
+import { BadRequestError, ErrorResponse } from '../utils/error.helper.js';
 
 export const register = async (userData) => {
     // Kiểm tra email đã tồn tại chưa
     const existingUser = await userRepository.getUserFromEmail(userData.email);
     if (existingUser){
-        throw new Error('Email này đã được sử dụng!');
+        throw new BadRequestError('Email này đã được sử dụng!');
     }
 
     // Hash mật khẩu trước khi lưu
@@ -23,13 +24,13 @@ export const login = async (email, password) => {
     // Tìm user bằng email
     const user = await userRepository.getUserFromEmail(email);
     if (!user){
-        throw new Error('Email hoặc mật khẩu không chính xác!');
+        throw new ErrorResponse('Email hoặc mật khẩu không chính xác!', 401);
     }
 
     // So sánh mật khẩu client gửi với hash pass trong DB
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch){
-        throw new Error('Email hoặc mật khẩu không chính xác!');
+        throw new ErrorResponse('Email hoặc mật khẩu không chính xác!', 401);
     }
 
     // Tạo Payload và Ký JWT

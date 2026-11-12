@@ -26,6 +26,15 @@ export const createUser = async (user) => {
     return result.recordset[0];
 };
 
+export const getUserById = async (userId) => {
+    const pool = await getPool();
+    const result = await pool.request()
+        .input('userId', sql.Int, userId)
+        .query('SELECT full_name, email, phone, role, created_at, updated_at FROM users WHERE id = @userId');
+    
+    return result.recordset[0];
+}
+
 export const updateUserProfile = async (userId, data) => {
     const pool = await getPool();
     const result = await pool.request()

@@ -1,5 +1,19 @@
 import * as userService from '../services/user.service.js';
 
+export const getUser = async (req, res, next) => {
+    try {
+        const userId = req.user.userId;
+        const userInfo = await userService.getUser(userId);
+        res.status(200).json({
+            success: true,
+            message: 'Lấy thông tin cá nhân thành công',
+            data: userInfo
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const updateProfile = async (req, res, next) => {
     try {
         // Lấy userId từ token đã được giải trong auth.middleware

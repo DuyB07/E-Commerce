@@ -24,8 +24,9 @@ export const createProduct = async (productData) => {
         .input('stock', sql.Int, productData.stock)
         .query(`
             INSERT INTO products (name, description, price, stock)
-            OUTPUT INSERTED.*
-            VALUES (@name, @description, @price, @stock)
+            VALUES (@name, @description, @price, @stock);
+
+            SELECT * FROM products WHERE id = SCOPE_IDENTITY();
         `);
     return result.recordset[0];
 };
@@ -47,6 +48,10 @@ export const updateProductInfo = async (productId, updateData) => {
     if (updateData.price) {
         setQuery.push("price = @price");
         request.input('price', sql.Decimal(10, 2), updateData.price);
+    }
+    if (updateData.isActive) {
+        setQuery.push("is_active = @isActive");
+        request.input('isActive', sql.Bit, updateData.isActive);
     }
 
     const query = `
